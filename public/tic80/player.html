@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TIC-80 Player</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1c2c;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-family: monospace;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">Waiting for game code...</div>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    <script>
+        var gameStarted = false;
+
+        var Module = {
+            canvas: document.getElementById('canvas'),
+            arguments: [],
+            preRun: [],
+            postRun: [],
+            print: function (text) { console.log('TIC-80: ' + text) },
+            printErr: function (text) { console.error('TIC-80 Error: ' + text) },
+            onRuntimeInitialized: function() {
+                console.log("TIC-80 runtime initialized");
+                document.getElementById('loading').style.display = 'none';
+            }
+        };
+
+        function startGame(luaCode) {
+            if (gameStarted) {
+                console.warn("Game already started, ignoring duplicate call");
+                return;
+            }
+            
+            console.log("=== STARTING GAME ===");
+            console.log("Game code length:", luaCode.length);
+            gameStarted = true;
+            
+            document.getElementById('loading').textContent = 'Loading TIC-80...';
+
+            // Store the game code for preRun
+            window.gameCodeToLoad = luaCode;
+            
+            Module.preRun = Module.preRun || [];
+            Module.preRun.push(function() {
+                console.log("preRun: Creating binary .tic cartridge...");
+                try {
+                    var code = window.gameCodeToLoad;
+                    
+                    // Create a binary .tic file with CODE chunk
+                    // Chunk format: [type+bank(1 byte)][size low(1 byte)][size high(1 byte)][reserved(1 byte)][data...]
+                    var codeBytes = new TextEncoder().encode(code);
+                    var codeSize = codeBytes.length;
+                    
+                    // Create chunk header: type 5 (CODE), bank 0
+                    var chunkType = 5; // CODE chunk
+                    var bank = 0;
+                    var header = new Uint8Array(4);
+                    header[0] = (bank << 5) | chunkType; // BBBCCCCC format
+                    header[1] = codeSize & 0xFF; // size low byte
+                    header[2] = (codeSize >> 8) & 0xFF; // size high byte
+                    header[3] = 0; // reserved
+                    
+                    // Combine header and code
+                    var cartData = new Uint8Array(header.length + codeBytes.length);
+                    cartData.set(header, 0);
+                    cartData.set(codeBytes, header.length);
+                    
+                    // Write to virtual filesystem
+                    FS.writeFile('game.tic', cartData);
+                    console.log("Binary cart created successfully, total size:", cartData.length);
+                } catch(e) {
+                    console.error("Failed to create cart:", e);
+                }
+            });
+            
+            // Load the binary cart
+            Module.arguments = ['--skip', 'game.tic'];
+            console.log("Module.arguments set to:", Module.arguments);
+
+            // Load the TIC-80 script
+            var script = document.createElement('script');
+            script.src = 'tic80.js';
+            script.onload = function() {
+                console.log("tic80.js loaded successfully");
+            };
+            script.onerror = function(e) {
+                console.error("Failed to load tic80.js:", e);
+                document.getElementById('loading').textContent = 'Error: Failed to load TIC-80';
+            };
+            document.body.appendChild(script);
+        }
+
+        function handleGameCode(code) {
+            // Handle object messages (like ready acknowledgment)
+            if (typeof code === 'object') {
+                console.log("Received object message:", JSON.stringify(code));
+                return;
+            }
+            
+            if (typeof code !== 'string' || code.length === 0) {
+                return;
+            }
+            
+            // Check for TIC-80 game code patterns
+            var isTicGame = code.includes('function TIC') || code.includes('function _TIC');
+            
+            if (isTicGame) {
+                console.log("Valid TIC-80 game code received, length:", code.length);
+                startGame(code);
+            } else {
+                console.log("Message doesn't appear to be TIC-80 code");
+            }
+        }
+
+        // Listen for messages from React Native WebView (Android/iOS)
+        document.addEventListener("message", function (event) {
+            handleGameCode(event.data);
+        });
+
+        // Listen for window.postMessage (Web iframe)
+        window.addEventListener("message", function (event) {
+            handleGameCode(event.data);
+        });
+
+        // Debug mode removed - game code comes from React app
+
+        // Input simulation for React Native controls
+        var keyMap = {
+            'ArrowUp': { key: 'ArrowUp', code: 'ArrowUp', keyCode: 38 },
+            'ArrowDown': { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40 },
+            'ArrowLeft': { key: 'ArrowLeft', code: 'ArrowLeft', keyCode: 37 },
+            'ArrowRight': { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39 },
+            'z': { key: 'z', code: 'KeyZ', keyCode: 90 },
+            'Z': { key: 'z', code: 'KeyZ', keyCode: 90 },
+            'x': { key: 'x', code: 'KeyX', keyCode: 88 },
+            'X': { key: 'x', code: 'KeyX', keyCode: 88 }
+        };
+
+        window.simulateKey = function (keyInput, type) {
+            var mapped = keyMap[keyInput] || { key: keyInput, code: keyInput, keyCode: 0 };
+            
+            var event = new KeyboardEvent(type, {
+                bubbles: true,
+                cancelable: true,
+                key: mapped.key,
+                code: mapped.code,
+                keyCode: mapped.keyCode,
+                which: mapped.keyCode
+            });
+            
+            window.dispatchEvent(event);
+            Module.canvas.dispatchEvent(event);
+        };
+
+        console.log("TIC-80 Player initialized, waiting for game code...");
+        
+        // Notify parent that we're ready
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'tic80-ready' }, '*');
+        }
+    </script>
+</body>
+
+</html>

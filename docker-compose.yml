@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  openhands:
+    image: docker.all-hands.dev/all-hands-ai/openhands:0.54
+    container_name: openhands-backend
+    network_mode: host
+    environment:
+      - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.54-nikolaik
+      - SANDBOX_USER_ID=${SANDBOX_USER_ID:-1000}
+      - LLM_API_KEY=${OPENAI_API_KEY}
+      - LLM_MODEL=${MODEL}
+      - LOG_ALL_EVENTS=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.openhands-state:/.openhands-state
+      - ./.openhands-state:/.openhands
+    extra_hosts:
+      - "host.docker.internal:127.0.0.1"
+    restart: unless-stopped

@@ -1,0 +1,6 @@
+[core]
+workspace_base = "/workspace"
+
+[llm]
+model = "openai/gpt-5-2025-08-07"
+api_key = "${OPENAI_API_KEY}"
