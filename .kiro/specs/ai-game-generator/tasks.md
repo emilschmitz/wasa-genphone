@@ -40,7 +40,7 @@
     - Update GameRunner to handle binary cart data if needed
   - **Testing**: Generate a game via OpenHands and verify it loads and runs in TIC-80
   - _Requirements: 2.2, 5.3, 5.4_
-
+q
 - [x] 2. Rewrite OpenHandsService to use correct OpenHands REST API
   - [x] 2.1 Update API endpoints to match actual OpenHands API
     - Change from `/api/v1/sessions` to `/api/conversations`
