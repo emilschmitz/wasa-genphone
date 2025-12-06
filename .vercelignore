@@ -1,0 +1,13 @@
+node_modules
+.expo
+.git
+.kiro
+.openhands-data
+.openhands-state
+.vscode
+android
+generated-games
+scripts
+.env
+docker-compose.yml
+openhands-config.toml
