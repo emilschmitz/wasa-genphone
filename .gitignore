@@ -4,3 +4,5 @@ node_modules
 .openhands-state
 .openhands-data/*
 dist
+.vercel
+.env*.local
