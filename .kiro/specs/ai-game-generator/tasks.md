@@ -277,3 +277,9 @@ q
     - Update key simulation to work with new button detection
     - Test all button inputs work correctly in games
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
+
+
+- [ ] 13. Fix screen alignment across different browsers/devices
+  - **Problem**: TIC-80 game screen aligns correctly on developer's screen but misaligns on other devices
+  - **Root Cause**: Screen positioning uses hardcoded calculation based on container height instead of actual phone image dimensions
+  - **Constraint**: Cannot use absolute positioning - TIC-80 canvas requires being in document flow to render properly
