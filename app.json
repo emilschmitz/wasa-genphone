@@ -13,7 +13,8 @@
       "web"
     ],
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single"
     },
     "android": {
       "package": "com.anonymous.createphonegame"

@@ -1,4 +1,7 @@
 {
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -22,7 +25,8 @@
     "@vercel/node": "^3.2.29",
     "metro": "^0.83.3",
     "metro-cache": "^0.83.3",
-    "typescript": "~5.9.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   },
   "name": "create-phone-game",
   "version": "1.0.0"

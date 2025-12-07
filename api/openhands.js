@@ -1,9 +1,7 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 const OPENHANDS_BASE_URL = 'https://app.all-hands.dev';
 const OPENHANDS_API_KEY = process.env.OPENHANDS_API_KEY;
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -21,7 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Missing path parameter' });
     }
 
-    const headers: Record<string, string> = {
+    const headers = {
       'Content-Type': 'application/json',
     };
 
@@ -29,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       headers['X-Session-API-Key'] = OPENHANDS_API_KEY;
     }
 
-    const fetchOptions: RequestInit = {
+    const fetchOptions = {
       method,
       headers,
     };
