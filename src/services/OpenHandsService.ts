@@ -8,7 +8,6 @@
  */
 
 export interface OpenHandsConfig {
-    baseUrl: string;
     timeout?: number; // milliseconds, default 5 minutes
 }
 
@@ -89,15 +88,27 @@ export class OpenHandsService {
     }
 
     /**
+     * Make API request through backend proxy (avoids CORS, keeps API key secure)
+     */
+    private async proxyFetch(path: string, options: RequestInit = {}): Promise<Response> {
+        return fetch('/api/openhands', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                path,
+                method: options.method || 'GET',
+                body: options.body ? JSON.parse(options.body as string) : undefined,
+            }),
+        });
+    }
+
+    /**
      * Create a new conversation with an initial prompt
      */
     async createConversation(initialMessage: string): Promise<CreateConversationResponse> {
         try {
-            const response = await fetch(`${this.config.baseUrl}/api/conversations`, {
+            const response = await this.proxyFetch('/api/conversations', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     initial_user_msg: initialMessage,
                 }),
@@ -128,15 +139,9 @@ export class OpenHandsService {
      */
     async getConversationStatus(conversationId: string): Promise<ConversationDetails> {
         try {
-            const response = await fetch(
-                `${this.config.baseUrl}/api/conversations/${conversationId}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
+            const response = await this.proxyFetch(`/api/conversations/${conversationId}`, {
+                method: 'GET',
+            });
 
             if (!response.ok) {
                 if (response.status === 404) {
@@ -157,14 +162,9 @@ export class OpenHandsService {
      */
     async getFileContent(conversationId: string, filePath: string): Promise<string> {
         try {
-            const response = await fetch(
-                `${this.config.baseUrl}/api/conversations/${conversationId}/select-file?file=${encodeURIComponent(filePath)}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
+            const response = await this.proxyFetch(
+                `/api/conversations/${conversationId}/select-file?file=${encodeURIComponent(filePath)}`,
+                { method: 'GET' }
             );
 
             if (!response.ok) {
@@ -294,9 +294,9 @@ export class OpenHandsService {
      */
     private async checkAgentComplete(conversationId: string): Promise<boolean> {
         try {
-            const response = await fetch(
-                `${this.config.baseUrl}/api/conversations/${conversationId}/events`,
-                { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+            const response = await this.proxyFetch(
+                `/api/conversations/${conversationId}/events`,
+                { method: 'GET' }
             );
             if (!response.ok) return false;
             

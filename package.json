@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/react": "^19.2.7",
     "@types/react-native": "^0.72.8",
+    "@vercel/node": "^3.2.29",
     "metro": "^0.83.3",
     "metro-cache": "^0.83.3",
     "typescript": "~5.9.2"

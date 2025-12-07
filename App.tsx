@@ -6,8 +6,7 @@ import { OpenHandsService, ConversationStatus } from './src/services/OpenHandsSe
 import { DEFAULT_THEME } from './src/config/phoneThemes';
 import { DETECTED_BUTTON_POSITIONS } from './src/config/buttonPositions';
 
-// OpenHands backend URL - configure based on your setup
-const OPENHANDS_BASE_URL = 'http://localhost:3000';
+// OpenHands Cloud - API key is stored securely on Vercel backend
 
 // Configuration: Enable/disable phone button touch controls
 // When false, use keyboard controls (Arrow keys, Space/Enter)
@@ -99,7 +98,6 @@ export default function App() {
     
     const menuOptions = ['Generate Game', 'Play Sample Game'];
     const openHandsService = useRef(new OpenHandsService({
-        baseUrl: OPENHANDS_BASE_URL,
         timeout: 5 * 60 * 1000, // 5 minutes
     }));
 
